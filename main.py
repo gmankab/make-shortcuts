@@ -1,34 +1,51 @@
-import os
-from sys import stdout
-print(stdout.encoding)
+import install_requirements
+import os, ctypes, sys, shutil, stat
 
-path = r'D:\dev\test'
 
 def ls(path):  # my listdir(), called like in linux
     if not os.path.isdir(path):
-        print(f'{path} is not a dir')
-        return
+        return []
 
-    dir = path.split('/')[-1]
+    dir_ = path.rsplit('\\', 1)[-1]
 
-    if dir in [
+    if dir_ in [
         'System Volume Information',
         '$RECYCLE.BIN',
-        '.git',  
+        'downloads'
+        '.git',
     ]:
-        print(f'{path} in blacklist')
-        return
+        return []
 
     return list(os.listdir( path))
 
-print('aboba')
 def mklink(path):
-    print(path) 
+    print(path)
+
+def conc(a, b):
+    if a[-1] == "\\":
+        a = a[:-1]
+    return '\\'.join([a, b])
+
+
+def rmdir(path):
+    dirlist=os.listdir(path)
+    for f in dirlist:
+        fullname=os.path.join(path,f)
+        if fullname == os.path.join(path,"thrash.txt"):
+            os.chmod(fullname , stat.S_IWRITE)
+            os.remove(fullname)
+        if os.path.isdir(fullname):
+            rmdir(fullname)
+
 
 def main():
-    for dir in ls(path):
-        for file in ls('\\'.join([path, dir])):
-            if file[:-4] == '.exe':
-                mklink(file)
-            elif file[:-5] == '.link':
-                mklink(file)
+    path = 'D:\\'
+    rmdir(conc(path, 'links'))
+    for dir1 in ls(path):
+        dir2 = conc(path, dir1)
+        for file in ls(dir2):
+            file = conc(dir2, file)
+            if file.rsplit('.', 1)[-1] == 'exe':
+                print(file)
+
+main()
