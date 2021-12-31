@@ -21,8 +21,7 @@ def run(command, printing:bool = True):
                 )
             )
 
-    output = os.popen(command).read()
     if printing:
-        print(output)
+        os.system(command)
     else:
-        return output
+        return os.popen(command).read()

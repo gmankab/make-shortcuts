@@ -1,5 +1,7 @@
 import sys
 from run_command import run
+from requirements import requirements
+from inspect import cleandoc
 
 
 def update_pip():
@@ -8,13 +10,28 @@ def update_pip():
         print(output)
 
 def main():
-    update_pip()
+    for import_name in requirements:
+        match type(import_name).__name__:
+            case 'str':
+                install_name = import_name
+            case 'list':
+                import_name, install_name = import_name
+            case _:
+                raise TypeError(
+                    cleandoc(
+                        f'''
+                        expected types of 'command' argument:
+                            str, list
+                        get:
+                            {type(import_name).__name__}
+                        '''
+                    )
+                )
 
-    for package in open('requirements.txt').readlines():
-        package = package.replace('\n', '')
         try:
-            __import__(package)
+            __import__(import_name)
         except ImportError:
-            run(f'{sys.executable} -m pip install {package}')
+            print(f'installing {install_name}...')
+            run(f'{sys.executable} -m pip install {install_name}')
 
-# main()
+main()

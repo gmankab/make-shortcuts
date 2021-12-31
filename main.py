@@ -1,25 +1,45 @@
 import install_requirements
-import os, ctypes, sys, shutil, stat
+import blacklist
+from run_command import run
+import shutil
+import ctypes
+import stat
+import sys
+import os
+from win32com.client import Dispatch
+from dataclasses import dataclass
+import pathlib
 
+
+@dataclass
+class Lnk:
+    path = ""
 
 def ls(path):  # my listdir(), called like in linux
     if not os.path.isdir(path):
+        if isends(path, '.exe'):
+            mklnk(Lnk.path, path)
         return []
 
-    dir_ = path.rsplit('\\', 1)[-1]
+    answer = list(os.listdir(path))
 
-    if dir_ in [
-        'System Volume Information',
-        '$RECYCLE.BIN',
-        'downloads'
-        '.git',
-    ]:
-        return []
+    for i in blacklist.rirs:
+        if i in answer:
+            answer.remove(i)
+    return answer
 
-    return list(os.listdir( path))
 
-def mklink(path):
-    print(path)
+def isends(file, ext):
+    return file[-len(ext):] == ext
+
+def mklnk(save_to, target):
+    if not isends (save_to, '.lnk'):
+        save_to = conc(save_to, target.rsplit('\\', 1)[-1].replace('.exe', '.lnk'))
+
+    shortcut = Dispatch('WScript.Shell').CreateShortCut(save_to)
+    shortcut.Targetpath = target
+    shortcut.WorkingDirectory = rf'{target}\..'
+    shortcut.save()
 
 def conc(a, b):
     if a[-1] == "\\":
@@ -28,24 +48,20 @@ def conc(a, b):
 
 
 def rmdir(path):
-    dirlist=os.listdir(path)
-    for f in dirlist:
-        fullname=os.path.join(path,f)
-        if fullname == os.path.join(path,"thrash.txt"):
-            os.chmod(fullname , stat.S_IWRITE)
-            os.remove(fullname)
-        if os.path.isdir(fullname):
-            rmdir(fullname)
-
+    run(f'RMDIR "{path}" /S /Q')
 
 def main():
     path = 'D:\\'
-    rmdir(conc(path, 'links'))
+    Lnk.path = conc(path, 'links')
+    rmdir(Lnk.path)
+    os.mkdir(Lnk.path)
     for dir1 in ls(path):
         dir2 = conc(path, dir1)
-        for file in ls(dir2):
-            file = conc(dir2, file)
-            if file.rsplit('.', 1)[-1] == 'exe':
-                print(file)
+        for dir3 in ls(dir2):
+            dir3 = conc(dir2, dir3)
+            for dir4 in ls(dir3):
+                dir4 = conc(dir3, dir4)
+                ls(dir4)
+
 
 main()

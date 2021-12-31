@@ -1,0 +1,1 @@
+D:\dev\Python-3.10.0\App\Python\python.exe main.py
