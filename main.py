@@ -23,7 +23,7 @@ def ls(path):  # my listdir(), called like in linux
 
     answer = list(os.listdir(path))
 
-    for i in blacklist.rirs:
+    for i in blacklist.dirs:
         if i in answer:
             answer.remove(i)
     return answer
