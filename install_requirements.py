@@ -1,5 +1,4 @@
 import sys
-from run_command import run
 from requirements import requirements
 from inspect import cleandoc
 
@@ -9,7 +8,7 @@ def update_pip():
     if output[:30] != 'Requirement already satisfied:':
         print(output)
 
-def main():
+def install_requirements():
     for import_name in requirements:
         match type(import_name).__name__:
             case 'str':
