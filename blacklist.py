@@ -91,5 +91,5 @@ exe = [
 ]
 
 to_rename = {
-    'launcheropera' : 'opera'
+    'launcheropera': 'opera'
 }

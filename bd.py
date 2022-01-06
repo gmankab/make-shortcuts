@@ -10,6 +10,8 @@
 
 '''
 
+python_vers = '3.10.1'
+
 from inspect import cleandoc
 import pickle
 import sys
@@ -23,25 +25,49 @@ import os
 # pylint: disable=import-error
 
 
+def check_python_vers(required_vers):
+    if '.'.join(str(i) for i in sys.version_info) < required_vers:
+        raise VersionError(
+            f'Python version must be at least {required_vers}'
+        )
+
+
+check_python_vers('3.10.1')
+
+
 def install(module):
-    match type(module).__name__:
-        case 'str':
-            install_name = module
-            import_name = module
-        case 'list':
-            import_name, install_name = module
-        case _:
-            raise TypeError(
-                type_error_message(
-                    expected=(str, list),
-                    get=type(module).__name__
-                )
-            )
+    def install_(module_):
+        print(f'installing {module_}:')
+        os.system(f'{sys.executable} -m pip install {module_ }')
+
     try:
-        __import__(import_name)
+        match type(module).__name__:
+            case 'str':
+                __import__(module)
+            case 'list':
+                __import__(module[0])
+            case _:
+                raise TypeError(
+                    type_error_message(
+                        expected=(str, list),
+                        get=type(module).__name__
+                    )
+                )
+
     except ImportError:
-        print(f'installing {install_name}:')
-        os.system(f'{sys.executable} -m pip install {install_name}')
+        match type(module[1]).__name__:
+            case 'str':
+                install_(module[1])
+            case 'list':
+                for i in module[1]:
+                    install(i)
+            case _:
+                raise TypeError(
+                    type_error_message(
+                        expected=(str, list),
+                        get=type(module).__name__
+                    )
+                )
 
 
 for module in [
@@ -53,6 +79,19 @@ for module in [
 
 from forbiddenfruit import curse
 import yaml
+
+
+def conc(self, *args):  # universal analog of ".join()"
+    to_join = []
+    for arg in args:
+        if isinstance(arg, list):
+            to_join += list(str(i) for i in arg)
+        else:
+            to_join.append(str(arg))
+    return self.join(to_join)
+
+
+curse(str, 'bdj', conc)
 
 
 class VersionError(Exception):
@@ -73,7 +112,7 @@ class UnsupportedExtensionError(Exception):
     pass
 
 
-class BetterData:
+class Bd:
     """
     @DynamicAttrs
     disabling pycharm "unresolved attribute" warnings
@@ -92,23 +131,22 @@ class BetterData:
         return vars(self)
 
 
-def init(required_vers = '3.10.1'):
-    check_python_vers(required_vers)
+class Path:
+    def __init__(self, *args):
+        for arg in args:
+            while arg[0] == '\\':
+                arg = arg[1:]
+            while arg[-1] == '\\':
+                arg = arg[:-1]
+        self.str = '\\'.conc(args)
 
-    if 'requirements.py' in os.listdir():
-        from requirements import requirements
-        for module in requirements:
-            install(module)
-
-    curse(str, 'bdj', bdj)  # noqa: F821
-    # add "bdj" method to "str" class
+    def __repr__(self):
+        return self.str
 
 
-def check_python_vers(required_vers):
-    if '.'.join(str(i) for i in sys.version_info) < required_vers:
-        raise VersionError(
-            f'Python version must be at least {required_vers}'
-        )
+a = Path('aboba')
+
+print(a)
 
 
 def run(command, printing: bool = True):
@@ -177,7 +215,7 @@ def load(name: str, ins: str = 'bd'):  # ins = instance or type
                 case 'dict' | 'dc' | 'dct':
                     return data
                 case 'bd' | 'betterdata':
-                    return BetterData(data)
+                    return Bd(data)
                 case _:
                     raise TypeError("Only 'bd' and 'dct' instances supported")
         case _:
@@ -241,13 +279,3 @@ def type_error_message(expected, get):
             {get}
         '''
     )
-
-
-def bdj(self, *args):  # universal analog of ".join()", better data join
-    to_join = []
-    for arg in args:
-        if isinstance(arg, list):
-            to_join += list(str(i) for i in arg)
-        else:
-            to_join.append(str(arg))
-    return self.join(to_join)

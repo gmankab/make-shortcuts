@@ -1,20 +1,28 @@
-import install_requirements
-from run_command import run
-import betterdata
-import blacklist
+import sys
+sys.path.append('.')
+
 import os
-from win32com.client import Dispatch
+import blacklist
+import bd
 from dataclasses import dataclass
 
+for module in [
+    ['win32com', ['pywin32', 'pypiwin32']],
+    'pypiwin32',
+    'winshell'
+]:
+    bd.install(module)
+
+from win32com.client import Dispatch
 
 
-def rmext(path:str):
+def rmext(path: str):
     return path.rsplit('.', 1)[0]
 
 
 def ls(path, lnk_path):  # my listdir(), called like in linux
     if not os.path.isdir(path):
-        if isends(path, '.exe'):
+        if bd.isends(path, '.exe'):
             mklnk(lnk_path, path)
         return []
 
@@ -22,16 +30,15 @@ def ls(path, lnk_path):  # my listdir(), called like in linux
     if 'python' in last_2_dirs[0].lower() and last_2_dirs[1] == 'App':
         mklnk(lnk_path, conc(path, r'Python\python.exe'))
 
-    return betterdata.list_subtract(
+    return bd.list_subtract(
         list(os.listdir(path)),
         blacklist.dirs,
     )
 
 
-
 def mklnk(save_to, target):
-    if not isends (save_to, '.lnk'):
-        save_to = conc(save_to, name(target).replace('.exe', '.lnk'))
+    if not bd.isends(save_to, '.lnk'):
+        save_to = bd.conc(save_to, bd.name(target).replace('.exe', '.lnk'))
 
     shortcut = Dispatch('WScript.Shell').CreateShortCut(save_to)
     shortcut.Targetpath = target
@@ -52,5 +59,3 @@ def main():
                 dir4 = conc(dir3, dir4)
                 ls(dir4, lnk_path)
 
-
-main()
