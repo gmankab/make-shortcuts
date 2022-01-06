@@ -81,17 +81,27 @@ from forbiddenfruit import curse
 import yaml
 
 
-def conc(self, *args):  # universal analog of ".join()"
-    to_join = []
-    for arg in args:
-        if isinstance(arg, list):
-            to_join += list(str(i) for i in arg)
-        else:
-            to_join.append(str(arg))
-    return self.join(to_join)
+def boost_str():
+    def conc(sep, *args):  # universal analog of ".join()"
+        to_join = []
+        for arg in args:
+            if isinstance(arg, list):
+                to_join += list(str(i) for i in arg)
+            else:
+                to_join.append(str(arg))
+        return sep.join(to_join)
+
+    def rmborders(string, border):
+        while string[:len(border)] == border:
+            string = string[len(border):]
+        while string[-len(border):] == '\\':
+            string = string[:-len(border)]
+
+    for name, func in locals().items():
+        curse(str, name, func)
 
 
-curse(str, 'bdj', conc)
+boost_str()
 
 
 class VersionError(Exception):
@@ -133,20 +143,14 @@ class Bd:
 
 class Path:
     def __init__(self, *args):
+        args = list(args)
         for arg in args:
-            while arg[0] == '\\':
-                arg = arg[1:]
-            while arg[-1] == '\\':
-                arg = arg[:-1]
+            if isinstance(arg, str):
+                arg.rmborders('\\')
         self.str = '\\'.conc(args)
 
     def __repr__(self):
         return self.str
-
-
-a = Path('aboba')
-
-print(a)
 
 
 def run(command, printing: bool = True):
