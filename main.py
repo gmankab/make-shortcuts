@@ -11,7 +11,7 @@ for module in [
     'pypiwin32',
     'winshell'
 ]:
-    bd.install(module)
+    bd.install_if_not(module)
 
 from win32com.client import Dispatch
 

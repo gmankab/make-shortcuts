@@ -12,6 +12,7 @@
 
 python_vers = '3.10.1'
 
+from dataclasses import dataclass
 from inspect import cleandoc
 import pickle
 import sys
@@ -32,49 +33,52 @@ def check_python_vers(required_vers):
         )
 
 
-check_python_vers('3.10.1')
+check_python_vers(python_vers)
 
 
-def install(module):
-    def install_(module_):
+def to_list(*args):
+    '''
+    make list of str from anything
+    '''
+
+    @dataclass
+    class Answer:
+        list = []
+
+    def recursive_add_str(whatever):
+        if isinstance(whatever, list):
+            for i in whatever:
+                recursive_add_str(i)
+        else:
+            Answer.list.append(str(whatever))
+
+    for arg in args:
+        recursive_add_str(arg)
+
+    return Answer.list
+
+
+def install_if_missing(module):
+    def pip_install(module_):
         print(f'installing {module_}:')
         os.system(f'{sys.executable} -m pip install {module_ }')
 
+    module = to_list(module)
     try:
-        match type(module).__name__:
-            case 'str':
-                __import__(module)
-            case 'list':
-                __import__(module[0])
-            case _:
-                raise TypeError(
-                    type_error_message(
-                        expected=(str, list),
-                        get=type(module).__name__
-                    )
-                )
-
+        __import__(module[0])
     except ImportError:
-        match type(module[1]).__name__:
-            case 'str':
-                install_(module[1])
-            case 'list':
-                for i in module[1]:
-                    install(i)
-            case _:
-                raise TypeError(
-                    type_error_message(
-                        expected=(str, list),
-                        get=type(module).__name__
-                    )
-                )
+        if len(module) == 1:
+            pip_install(module[0])
+        else:
+            for i in module[1:]:
+                pip_install(i)
 
 
 for module in [
     'forbiddenfruit',
     ['yaml', 'pyyaml'],
 ]:
-    install(module)
+    install_if_missing(module)
 
 
 from forbiddenfruit import curse
@@ -84,18 +88,14 @@ import yaml
 def boost_str():
     def conc(sep, *args):  # universal analog of ".join()"
         to_join = []
-        for arg in args:
-            if isinstance(arg, list):
-                to_join += list(str(i) for i in arg)
-            else:
-                to_join.append(str(arg))
         return sep.join(to_join)
 
-    def rmborders(string, border):
-        while string[:len(border)] == border:
-            string = string[len(border):]
-        while string[-len(border):] == '\\':
-            string = string[:-len(border)]
+    def rmborders(string, *borders):
+        for border in borders:
+            while string[:len(border)] == border:
+                string = string[len(border):]
+            while string[-len(border):] == '\\':
+                string = string[:-len(border)]
 
     for name, func in locals().items():
         curse(str, name, func)
