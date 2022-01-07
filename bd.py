@@ -14,6 +14,8 @@ python_vers = '3.10.1'
 
 from dataclasses import dataclass
 from inspect import cleandoc
+from pprint import pprint
+import inspect
 import pickle
 import sys
 import os
@@ -36,7 +38,7 @@ def check_python_vers(required_vers):
 check_python_vers(python_vers)
 
 
-def to_list(*args):
+def to_list(*args, convert=None):
     '''
     make list of str from anything
     '''
@@ -46,11 +48,13 @@ def to_list(*args):
         list = []
 
     def recursive_add_str(whatever):
-        if isinstance(whatever, list):
+        if isinstance(whatever, (list, tuple)):
             for i in whatever:
                 recursive_add_str(i)
         else:
-            Answer.list.append(str(whatever))
+            if convert:
+                whatever = convert(whatever)
+            Answer.list.append(whatever)
 
     for arg in args:
         recursive_add_str(arg)
@@ -63,7 +67,7 @@ def install_if_missing(module):
         print(f'installing {module_}:')
         os.system(f'{sys.executable} -m pip install {module_ }')
 
-    module = to_list(module)
+    module = to_list(module, convert=str)
     try:
         __import__(module[0])
     except ImportError:
@@ -85,23 +89,34 @@ from forbiddenfruit import curse
 import yaml
 
 
-def boost_str():
-    def conc(sep, *args):  # universal analog of ".join()"
+def modify_builtin_functions():
+    def str_conc(self, *args):  # universal analog of ".join()"
         to_join = []
-        return sep.join(to_join)
+        return self.join(to_join)
 
-    def rmborders(string, *borders):
+    def str_rmborders(self, *borders):
         for border in borders:
-            while string[:len(border)] == border:
-                string = string[len(border):]
-            while string[-len(border):] == '\\':
-                string = string[:-len(border)]
+            while self[:len(border)] == border:
+                self = self[len(border):]
+            while self[-len(border):] == '\\':
+                self = self[:-len(border)]
 
-    for name, func in locals().items():
-        curse(str, name, func)
+    def list_rm(self, *to_remove):
+        for i in to_list(to_remove):
+            if i in self:
+                self.remove(i)
+        return self
+
+    for funcname, func in locals().copy().items():
+        builtin_funcname, addmethod = funcname.split('_', 1)
+        curse(eval(builtin_funcname), addmethod, func)
 
 
-boost_str()
+modify_builtin_functions()
+
+print(
+    [1, 2, 3, 4, {'a': 'b'}].rm('a', 'b', 1, [6, 7, 8, [[2, 7, 8]]], {'a': 'b'}, '1', '2', '3')
+)
 
 
 class VersionError(Exception):
@@ -235,13 +250,6 @@ def update_pip():
     )
     if output[:30] != 'Requirement already satisfied:':
         print(output)
-
-
-def list_subtract(list_, blacklist):
-    for i in blacklist:
-        if i in list_:
-            list_.remove(i)
-    return list_
 
 
 def isends(file, ext):
