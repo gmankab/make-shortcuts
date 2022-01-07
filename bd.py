@@ -13,9 +13,8 @@
 python_vers = '3.10.1'
 
 from dataclasses import dataclass
-from inspect import cleandoc
-from pprint import pprint
-import inspect
+from inspect import cleandoc as cd
+from pprint import pp
 import pickle
 import sys
 import os
@@ -90,12 +89,11 @@ import yaml
 
 
 def modify_builtin_functions():
-    def str_conc(self, *args):  # universal analog of ".join()"
-        to_join = []
-        return self.join(to_join)
+    def str_conc(self, *peaces):  # universal analog of ".join()"
+        return self.join(to_list(peaces, convert=str))
 
     def str_rmborders(self, *borders):
-        for border in borders:
+        for border in to_list(borders):
             while self[:len(border)] == border:
                 self = self[len(border):]
             while self[-len(border):] == '\\':
@@ -113,10 +111,6 @@ def modify_builtin_functions():
 
 
 modify_builtin_functions()
-
-print(
-    [1, 2, 3, 4, {'a': 'b'}].rm('a', 'b', 1, [6, 7, 8, [[2, 7, 8]]], {'a': 'b'}, '1', '2', '3')
-)
 
 
 class VersionError(Exception):
@@ -161,11 +155,16 @@ class Path:
         args = list(args)
         for arg in args:
             if isinstance(arg, str):
-                arg.rmborders('\\')
-        self.str = '\\'.conc(args)
+                arg.rmborders('/', '\\')
+        self.str = '/'.conc(args)
 
     def __repr__(self):
         return self.str
+
+    def conc(*peaces):
+        for peace in peaces:
+            peace.rmborders('\\', '/')
+        return '/'.conc()
 
 
 def run(command, printing: bool = True):
@@ -177,7 +176,7 @@ def run(command, printing: bool = True):
             command = ' '.join(command)
         case _:
             raise TypeError(
-                cleandoc(
+                cd(
                     f'''
                     expected types of 'command' argument:
                         str, list
@@ -256,12 +255,6 @@ def isends(file, ext):
     return file[-len(ext):] == ext
 
 
-# def conc(a, b):
-#     if a[-1] == "\\":
-#         a = a[:-1]
-#     return '\\'.join([a, b])
-
-
 def filename(path: str):
     return path.rsplit('\\', 1)[-1]
 
@@ -283,7 +276,7 @@ def typenm(object_):  # type name
 
 
 def type_error_message(expected, get):
-    return cleandoc(
+    return cd(
         f'''
         expected types:
             {', '.join(expected)}
@@ -291,3 +284,6 @@ def type_error_message(expected, get):
             {get}
         '''
     )
+
+
+path = Path('D')
