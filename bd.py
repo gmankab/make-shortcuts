@@ -1,16 +1,13 @@
 '''
-
-   oooooooooo.   oooooooooo.       telegram | gmanka
-   `888'   `Y8b  `888'   `Y8b       discord | gmanka#3806
-    888     888   888      888       github | gmankab/betterdata
-    888oooo888'   888      888       donate | 5536 9139 9403 2981
-    888    `88b   888      888       python | 3.10.1
-    888    .88P   888     d88'       vscode | 1.61.2
-   o888bood8P'   o888bood8P'     betterdata | 22.0
+oooooooooo.   oooooooooo.
+`888'   `Y8b  `888'   `Y8b
+ 888     888   888      888
+ 888oooo888'   888      888
+ 888    `88b   888      888
+ 888    .88P   888     d88'
+o888bood8P'   o888bood8P'
 
 '''
-
-python_vers = '3.10.1'
 
 from dataclasses import dataclass
 from inspect import cleandoc as cd
@@ -18,6 +15,27 @@ from pprint import pp
 import pickle
 import sys
 import os
+import re
+
+
+@dataclass
+class Version:
+    python_required = '3.10.1'
+    betterdata = '22.0'
+
+
+@dataclass
+class Contacts:
+    telegram = 'https://t.me/gmanka'
+    discord = 'gmanka#3806'
+    github = 'https://github.com/gmankab/betterdata'
+
+
+@dataclass
+class Donate:
+    DonationAlerts = 'https://donationalerts.com/r/gmanka'
+    tinkoff = '5536 9139 9403 2981'
+    sber = '5336 6903 8044 6684'
 
 # noqa: E731
 # noqa: F821
@@ -34,7 +52,7 @@ def check_python_vers(required_vers):
         )
 
 
-check_python_vers(python_vers)
+check_python_vers(required_vers=Version.python_required)
 
 
 def to_list(*args, convert=None):
@@ -99,6 +117,15 @@ def modify_builtin_functions():
             while self[-len(border):] == '\\':
                 self = self[:-len(border)]
 
+    def str_msplit(self, *delimiters):
+        if not delimiters:
+            return self
+        splitted = [self]
+        delimiters = to_list(delimiters)
+        for delimiter in delimiters:
+            for i in splitted:
+                splitted
+
     def list_rm(self, *to_remove):
         for i in to_list(to_remove):
             if i in self:
@@ -111,6 +138,7 @@ def modify_builtin_functions():
 
 
 modify_builtin_functions()
+
 
 
 class VersionError(Exception):
@@ -152,23 +180,24 @@ class Bd:
 
 class Path:
     def __init__(self, *args):
-        args = list(args)
-        for arg in args:
-            if isinstance(arg, str):
-                arg.rmborders('/', '\\')
-        self.str = '/'.conc(args)
+        args = to_list(args)
+        self.list = []
+        # for i in args.split('/'):
+        #     self.list += i.msplit()
 
     def __repr__(self):
         return self.str
 
     def conc(*peaces):
+        peaces = to_list(peaces)
         for peace in peaces:
-            peace.rmborders('\\', '/')
+            if isinstance(peace, str):
+                peace.rmborders('\\', '/')
         return '/'.conc()
 
 
 def run(command, printing: bool = True):
-    command_type = type(command).__name__
+    command_type = typenm(command)
     match command_type:
         case 'str':
             pass
