@@ -107,8 +107,17 @@ import yaml
 
 
 def modify_builtin_functions():
+    def str_isends(self, end):
+        return self[-len(end):] == end
+
     def str_conc(self, *peaces):  # universal analog of ".join()"
         return self.join(to_list(peaces, convert=str))
+
+    def rm(self, *to_remove):
+        to_remove = to_list(to_remove, convert=str)
+        for i in to_remove:
+            self = self.replace(i, '')
+        return self
 
     def str_rmborders(self, *borders):
         for border in to_list(borders):
@@ -117,14 +126,26 @@ def modify_builtin_functions():
             while self[-len(border):] == '\\':
                 self = self[:-len(border)]
 
-    def str_msplit(self, *delimiters):
-        if not delimiters:
-            return self
-        splitted = [self]
-        delimiters = to_list(delimiters)
-        for delimiter in delimiters:
-            for i in splitted:
-                splitted
+    def str_msplit(self, *delims, limit=None):
+        if not limit and isinstance(delims[-1], int):
+            limit = delims[-1]
+            delims = delims[:-1]
+        delims = to_list(delims)
+        pos = 0
+        splitted = []
+        for index in range(len(self)):
+            for delim in delims:
+                if self[index:index + len(delim)] == delim:
+                    if limit:
+                        limit -= 1
+                    elif limit == 0:
+                        splitted.append(self[pos:])
+                        return splitted
+                    if self[pos:index]:
+                        splitted.append(self[pos:index])
+                    pos = index + len(delim)
+        splitted.append(self[pos:])
+        return splitted
 
     def list_rm(self, *to_remove):
         for i in to_list(to_remove):
@@ -138,7 +159,6 @@ def modify_builtin_functions():
 
 
 modify_builtin_functions()
-
 
 
 class VersionError(Exception):
@@ -179,25 +199,40 @@ class Bd:
 
 
 class Path:
-    def __init__(self, *args):
-        args = to_list(args)
+    def __init__(self, *peaces):
+        peaces = to_list(peaces)
         self.list = []
+        self.conc(peaces)
         # for i in args.split('/'):
         #     self.list += i.msplit()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.str
 
-    def conc(*peaces):
-        peaces = to_list(peaces)
+    def __getitem__(self, item):
+        return self.list[item]
+
+    def conc(self, *peaces):
+        peaces = to_list(peaces, convert=str)
         for peace in peaces:
-            if isinstance(peace, str):
-                peace.rmborders('\\', '/')
-        return '/'.conc()
+            self.list += peace.msplit('/', '\\')
+            self.str = '/'.join(self.list)
+        return self.str
+
+    def rmdir(self):
+        run(f'rmdir "{self.str}" /S /Q')
+
+    def 
+
+    isends = str.isends
+
+
+path = Path('a/b/c\\d\\e/f', 'g', 'h', ['i'], 1)
+print(path[-2])
 
 
 def run(command, printing: bool = True):
-    command_type = typenm(command)
+    command_type = typestr(command)
     match command_type:
         case 'str':
             pass
@@ -280,27 +315,7 @@ def update_pip():
         print(output)
 
 
-def isends(file, ext):
-    return file[-len(ext):] == ext
-
-
-def filename(path: str):
-    return path.rsplit('\\', 1)[-1]
-
-
-def rmdir(path: str):
-    run(f'RMDIR "{path}" /S /Q')
-
-
-def rm(string: str, to_remove):
-    if isinstance(to_remove, str):
-        to_remove = [to_remove]
-    for i in to_remove:
-        string = string.replace(i, '')
-    return string
-
-
-def typenm(object_):  # type name
+def typestr(object_):  # type name
     return type(object_).__name__
 
 
@@ -313,6 +328,3 @@ def type_error_message(expected, get):
             {get}
         '''
     )
-
-
-path = Path('D')
