@@ -222,8 +222,6 @@ class Path:
     def rmdir(self):
         run(f'rmdir "{self.str}" /S /Q')
 
-    def 
-
     isends = str.isends
 
 
