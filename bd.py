@@ -121,7 +121,6 @@ from forbiddenfruit_0_1_4 import curse
 import yml_6_0 as yml
 
 
-
 # noqa: E731
 # noqa: F821
 # pyright: reportUndefinedVariable=false
