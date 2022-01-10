@@ -9,18 +9,101 @@ o888bood8P'   o888bood8P'
 
 '''
 
+
+# import only builtin libs
 from dataclasses import dataclass
 from inspect import cleandoc as cd
 from pprint import pp
+from urllib import request as r
+import pathlib
+import shutil
 import pickle
 import sys
 import os
-import re
+
+
+@dataclass
+class Requirements:
+    link = 'https://raw.githubusercontent.com/gmankab/betterdata/main/libs'
+    dict = {
+        'forbiddenfruit_0_1_4': [
+            '__init__.py',
+        ],
+        'yml_6_0': [
+            'composer.py',
+            'constructor.py',
+            'cyaml.py',
+            'dumper.py',
+            'emitter.py',
+            'error.py',
+            'events.py',
+            'loader.py',
+            'nodes.py',
+            'parser.py',
+            'reader.py',
+            'representer.py',
+            'resolver.py',
+            'scanner.py',
+            'serializer.py',
+            'tokens.py',
+            '__init__.py'
+        ]
+    }
+
+
+filedir = str(pathlib.Path(__file__).parent.resolve()).replace('\\', '/')
+sys.path.append(filedir)
+
+
+if 'libs' in os.listdir():
+    sys.path.append(f'{filedir}/libs')
+
+
+# installing non-builtin libs
+try:
+    for requirement in Requirements.dict.keys():
+        __import__(requirement)
+except ImportError:
+    print('downloadings libs...')
+
+    libs_dir = f'{filedir}/libs'
+
+    if 'libs' in os.listdir(filedir):
+        shutil.rmtree(libs_dir)
+
+    os.mkdir(libs_dir)
+
+    for requirement, files in Requirements.dict.items():
+        libdir = f'{libs_dir}/{requirement}'
+        os.mkdir(libdir)
+        for file in files:
+            print(f'downloading {file}')
+            r.urlretrieve(
+                f'{Requirements.link}/{requirement}/{file}',
+                f'{libdir}/{file}'
+            )
+
+
+if 'libs' in os.listdir():
+    sys.path.append(f'{filedir}/libs')
+
+
+# import non-builtin libs
+from forbiddenfruit_0_1_4 import curse
+import yml_6_0 as yml
 
 
 @dataclass
 class Version:
+    # the betterdata library was written in this version of python,
+    # on lower python versions it will not work
     python_required = '3.10.1'
+
+    # stable work is guaranteed only on python versions listed here:
+    python_tested_on = [
+        '3.10.1'
+    ]
+
     betterdata = '22.0'
 
 
@@ -37,10 +120,12 @@ class Donate:
     tinkoff = '5536 9139 9403 2981'
     sber = '5336 6903 8044 6684'
 
+
 # noqa: E731
 # noqa: F821
 # pyright: reportUndefinedVariable=false
 # pyright: reportMissingImports=false
+# pyright: reportMissingModuleSource=false
 # pylint: disable=import-outside-toplevel
 # pylint: disable=import-error
 
@@ -79,33 +164,6 @@ def to_list(*args, convert=None):
     return Answer.list
 
 
-def install_if_missing(module):
-    def pip_install(module_):
-        print(f'installing {module_}:')
-        os.system(f'{sys.executable} -m pip install {module_ }')
-
-    module = to_list(module, convert=str)
-    try:
-        __import__(module[0])
-    except ImportError:
-        if len(module) == 1:
-            pip_install(module[0])
-        else:
-            for i in module[1:]:
-                pip_install(i)
-
-
-for module in [
-    'forbiddenfruit',
-    ['yaml', 'pyyaml'],
-]:
-    install_if_missing(module)
-
-
-from forbiddenfruit import curse
-import yaml
-
-
 def modify_builtin_functions():
     def str_isends(self, end):
         return self[-len(end):] == end
@@ -113,7 +171,7 @@ def modify_builtin_functions():
     def str_conc(self, *peaces):  # universal analog of ".join()"
         return self.join(to_list(peaces, convert=str))
 
-    def rm(self, *to_remove):
+    def str_rm(self, *to_remove):
         to_remove = to_list(to_remove, convert=str)
         for i in to_remove:
             self = self.replace(i, '')
@@ -225,10 +283,6 @@ class Path:
     isends = str.isends
 
 
-path = Path('a/b/c\\d\\e/f', 'g', 'h', ['i'], 1)
-print(path[-2])
-
-
 def run(command, printing: bool = True):
     command_type = typestr(command)
     match command_type:
@@ -271,7 +325,7 @@ def dump(data, name: str = None):
         case 'yml':
             if not isinstance(data, dict):
                 data = data.to_dict
-            yaml.dump(data, open(f'data/{name}', 'w'))
+            yml.dump(data, open(f'data/{name}', 'w'))
         case _:
             raise UnsupportedExtensionError(
                 "only 'pickle' and 'yml' extensions supported"
@@ -286,9 +340,9 @@ def load(name: str, ins: str = 'bd'):  # ins = instance or type
             data.name = name
             return data
         case 'yml ':
-            data = yaml.load(
+            data = yml.load(
                 open(f'data/{name}', 'r').read(),
-                Loader=yaml.Loader
+                Loader=yml.Loader
             )
             data['name'] = name
             match ins.lower():
@@ -302,15 +356,6 @@ def load(name: str, ins: str = 'bd'):  # ins = instance or type
             raise UnsupportedExtensionError(
                 "only 'pickle' and 'yml' extensions supported"
             )
-
-
-def update_pip():
-    output = run(
-        f'{sys.executable} -m pip install --upgrade pip',
-        printing=False
-    )
-    if output[:30] != 'Requirement already satisfied:':
-        print(output)
 
 
 def typestr(object_):  # type name
