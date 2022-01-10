@@ -23,6 +23,34 @@ import os
 
 
 @dataclass
+class Version:
+    # the betterdata library was written in this version of python,
+    # on lower python versions it will not work
+    python_required = '3.10.1'
+
+    # stable work is guaranteed only on python versions listed here:
+    python_tested_on = [
+        '3.10.1'
+    ]
+
+    betterdata = '22.0'
+
+
+@dataclass
+class Contacts:
+    telegram = 'https://t.me/gmanka'
+    discord = 'gmanka#3806'
+    github = 'https://github.com/gmankab/betterdata'
+
+
+@dataclass
+class Donate:
+    DonationAlerts = 'https://donationalerts.com/r/gmanka'
+    tinkoff = '5536 9139 9403 2981'
+    sber = '5336 6903 8044 6684'
+
+
+@dataclass
 class Requirements:
     link = 'https://raw.githubusercontent.com/gmankab/betterdata/main/libs'
     dict = {
@@ -92,33 +120,6 @@ if 'libs' in os.listdir():
 from forbiddenfruit_0_1_4 import curse
 import yml_6_0 as yml
 
-
-@dataclass
-class Version:
-    # the betterdata library was written in this version of python,
-    # on lower python versions it will not work
-    python_required = '3.10.1'
-
-    # stable work is guaranteed only on python versions listed here:
-    python_tested_on = [
-        '3.10.1'
-    ]
-
-    betterdata = '22.0'
-
-
-@dataclass
-class Contacts:
-    telegram = 'https://t.me/gmanka'
-    discord = 'gmanka#3806'
-    github = 'https://github.com/gmankab/betterdata'
-
-
-@dataclass
-class Donate:
-    DonationAlerts = 'https://donationalerts.com/r/gmanka'
-    tinkoff = '5536 9139 9403 2981'
-    sber = '5336 6903 8044 6684'
 
 
 # noqa: E731
